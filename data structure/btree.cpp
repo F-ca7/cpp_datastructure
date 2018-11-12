@@ -1,18 +1,18 @@
 #include <iostream>
 #include "sqstack.cpp"
 #include "liqueue.cpp"
+
 template <typename T>
 class BTree;
 
 template <typename T>
 class BTNode {
 	friend class BTree<T>;
-private:
+	friend class TreeUtil;
+public:
 	T data;
 	BTNode* lchild;
 	BTNode* rchild;
-
-public:
 	BTNode() {
 		lchild = rchild = nullptr;
 	}
@@ -30,9 +30,10 @@ public:
 
 template <typename T>
 class BTree {
+	friend class TreeUtil;
 protected:
 	BTNode<T>* root;
-
+	
 	void CreateBTree(const char* str) {
 		Sqstack<BTNode<T>*> st;
 		BTNode<T>* p = nullptr, *top = nullptr;
@@ -134,13 +135,13 @@ protected:
 
 	void PreOrderHelper(BTNode<T>* n) {
 		printf("%c ", n->data);
-		if(n->lchild!=nullptr)
+		if (n->lchild != nullptr)
 			PreOrderHelper(n->lchild);
 		if (n->rchild != nullptr)
 			PreOrderHelper(n->rchild);
 	}
 
-	void PostOrderHelper(BTNode<T>* n) {		
+	void PostOrderHelper(BTNode<T>* n) {
 		if (n->lchild != nullptr)
 			PostOrderHelper(n->lchild);
 		if (n->rchild != nullptr)
@@ -148,12 +149,21 @@ protected:
 		printf("%c ", n->data);
 	}
 
-	void InOrderHelper(BTNode<T>* n) {		
+	void InOrderHelper(BTNode<T>* n) {
 		if (n->lchild != nullptr)
 			InOrderHelper(n->lchild);
 		printf("%c ", n->data);
 		if (n->rchild != nullptr)
 			InOrderHelper(n->rchild);
+	}
+
+	BTNode<T>* CopyHelp(BTNode<T>* n) {
+		if (n == nullptr)
+			return nullptr;
+		BTNode<T>* node = new BTNode<T>(n->data);
+		node->lchild = CopyHelp(n->lchild);
+		node->rchild = CopyHelp(n->rchild);
+		return node;
 	}
 public:
 	BTree() :root(nullptr) {
@@ -163,11 +173,22 @@ public:
 		CreateBTree(str);
 	}
 
+	//拷贝构造函数，有必要
+	BTree(const BTree<T>& t) {
+		root = CopyHelp(t.root);
+	}
+
+
+
 	~BTree() {
 		DestroyBTree(root);
 	}
 
 	void Disp() {
+		if (root == nullptr) {
+			printf("Empty tree!");
+			return;
+		}
 		DispHelp(root);
 		printf("\n");
 	}
@@ -212,7 +233,8 @@ public:
 					st.Push(p->lchild);
 				}
 			}
-		}else {
+		}
+		else {
 			printf("Empty tree!");
 		}
 		printf("\n");
@@ -237,7 +259,7 @@ public:
 					st.Push(p->rchild);
 				}
 			}
-			while (!st.IsEmpty()) 
+			while (!st.IsEmpty())
 			{
 				st_rev.Push(st.Pop());		//进入倒序栈
 			}
@@ -258,9 +280,9 @@ public:
 		BTNode<T>* p = root->lchild;
 		if (root != nullptr) {	//空二叉树就不用管了
 			st.Push(root);
-			while (!st.IsEmpty() || p!=nullptr)
+			while (!st.IsEmpty() || p != nullptr)
 			{
-				while (p!=nullptr)		//将左孩子结点全部进栈
+				while (p != nullptr)		//将左孩子结点全部进栈
 				{
 					st.Push(p);
 					p = p->lchild;
@@ -270,14 +292,15 @@ public:
 				p = p->rchild;
 
 			}
-		}else {
+		}
+		else {
 			printf("Empty tree!");
 		}
 		printf("\n");
 	}
 
 	//用链队
-	void LevelOrder(){
+	void LevelOrder() {
 		Liqueue<BTNode<T>*> qu;
 		BTNode<T>* p = nullptr;
 		qu.Enqueue(root);
@@ -285,11 +308,10 @@ public:
 		{
 			qu.Dequeue(p);
 			printf("%c ", p->data);
-			if (p->lchild!=nullptr)
+			if (p->lchild != nullptr)
 				qu.Enqueue(p->lchild);
 			if (p->rchild != nullptr)
 				qu.Enqueue(p->rchild);
-
 		}
 	}
 };
